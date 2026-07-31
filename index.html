@@ -158,7 +158,7 @@
     </div>
 </div>
 
-<!-- SKRIN LOG MASUK (Hanya aktif selepas Super Admin membuka kunci) -->
+<!-- SKRIN LOG MASUK -->
 <div class="shell hidden" id="loginScreen">
     <div class="academic-card w-full shadow-2xl p-8 sm:p-10 border-t-4" style="max-width:440px; border-top-color: var(--primary);">
         
@@ -260,7 +260,7 @@
     </div>
 </div>
 
-<!-- PORTAL PENSYARAH -->
+<!-- PORTAL PENSYARAH & SUPER ADMIN -->
 <div id="lecturerDash" style="display:none;" class="min-h-screen flex-col">
     <div class="bg-blue-950 text-white px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
         <div class="flex items-center gap-4">
@@ -268,7 +268,10 @@
                 <i class="fas fa-chalkboard-teacher"></i>
             </div>
             <div>
-                <div class="text-[10px] font-bold text-blue-300 uppercase tracking-widest">Ruang Kerja Pensyarah</div>
+                <div class="text-[10px] font-bold text-blue-300 uppercase tracking-widest flex items-center gap-2">
+                    <span>Ruang Kerja Pensyarah</span>
+                    <span id="superAdminBadge" class="bg-amber-400 text-slate-900 px-2 py-0.5 rounded font-black text-[9px] uppercase hidden">SUPER ADMIN</span>
+                </div>
                 <div id="lecName" class="font-serif-title font-bold text-lg">--</div>
             </div>
         </div>
@@ -277,10 +280,10 @@
 
     <!-- Navigasi Tab Pensyarah -->
     <div class="px-8 pt-4 bg-white border-b border-slate-200">
-        <div class="tab-bar max-w-5xl bg-transparent border-none p-0 gap-2 overflow-x-auto">
+        <div class="tab-bar max-w-6xl bg-transparent border-none p-0 gap-2 overflow-x-auto">
             <button class="tab active" onclick="showLecTab('rubrik')"><i class="fas fa-clipboard-list me-1"></i> Panel Rubrik Dinamik</button>
             <button class="tab" onclick="showLecTab('summary')"><i class="fas fa-table me-1"></i> Buku Rekod Markah</button>
-            <button class="tab" id="lecturerPeerStatusTab" onclick="showLecTab('peerstatus')"><i class="fas fa-user-check me-1"></i> Status Rakan</button>
+            <button class="tab" id="adminSettingsTabBtn" onclick="showLecTab('adminsettings')" style="display:none;" class="text-amber-700 font-bold"><i class="fas fa-cogs me-1"></i> Tetapan Kursus (Admin)</button>
         </div>
     </div>
 
@@ -295,7 +298,7 @@
             <div id="sList" class="scroll-thin flex-1 overflow-y-auto pr-1"></div>
         </div>
 
-        <!-- Ruang Kandungan Utam (3 Kolum) -->
+        <!-- Ruang Kandungan Utam -->
         <div class="lg:col-span-3">
             <!-- TAB PANEL RUBRIK DINAMIK -->
             <div id="ltab-rubrik">
@@ -314,7 +317,6 @@
                         </div>
                     </div>
 
-                    <!-- Borang Rubrik Dinamik Dijana Di Sini -->
                     <div id="dynamicRubrikContainer" class="space-y-6"></div>
 
                     <div class="academic-card p-6 bg-slate-50 border-t-4 border-blue-900 text-center">
@@ -346,11 +348,81 @@
                 </div>
             </div>
 
-            <!-- TAB STATUS PENILAIAN RAKAN -->
-            <div id="ltab-peerstatus" class="hidden">
-                <div class="academic-card p-6">
-                    <h3 class="font-serif-title text-xl font-bold text-slate-800 mb-4">Status Penilalan Rakan Sebaya</h3>
-                    <div id="peerStatusContainer" class="text-xs text-slate-500">Memuatkan data...</div>
+            <!-- TAB TETAPAN KURSUS (KHAS SUPER ADMIN) -->
+            <div id="ltab-adminsettings" class="hidden space-y-6">
+                <!-- PANELS FORM SETUP KURSUS -->
+                <div class="academic-card p-6 border-l-4 border-amber-600 bg-white">
+                    <div class="flex items-center gap-3 border-b pb-4 mb-6">
+                        <div class="w-10 h-10 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center text-lg">
+                            <i class="fas fa-sliders-h"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-serif-title text-xl font-bold text-slate-800">Konfigurasi Kursus &amp; Sistem</h3>
+                            <p class="text-xs text-slate-500">Ubah maklumat rasmi kursus. Data akan dikemaskini secara automatik ke Google Sheets.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Kod Kursus</label>
+                            <input type="text" id="cfgKodKursus" class="w-full text-xs font-bold font-mono-score">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Nama Kursus</label>
+                            <input type="text" id="cfgNamaKursus" class="w-full text-xs font-bold">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Institusi / Fakulti</label>
+                            <input type="text" id="cfgInstitusi" class="w-full text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Suis Penilaian Rakan Sebaya</label>
+                            <select id="cfgEnablePeer" class="w-full text-xs font-bold">
+                                <option value="TRUE">Aktifkan (TRUE)</option>
+                                <option value="FALSE">Nyahaktifkan (FALSE)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="saveSystemSettings()" id="saveCfgBtn" class="btn-primary py-3 px-6 rounded-lg text-xs bg-amber-700 border-amber-700 hover:bg-amber-800">
+                        <i class="fas fa-save me-2"></i> Simpan Tetapan Kursus
+                    </button>
+                </div>
+
+                <!-- FORM TAMBAH PELAJAR BAHARU -->
+                <div class="academic-card p-6 border-l-4 border-blue-900 bg-white">
+                    <div class="flex items-center gap-3 border-b pb-4 mb-6">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-900 rounded-lg flex items-center justify-center text-lg">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-serif-title text-xl font-bold text-slate-800">Daftar Calon Pelajar Baharu</h3>
+                            <p class="text-xs text-slate-500">Tambah maklumat pelajar terus ke dalam pangkalan data `DATA_PELAJAR`.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Nama Penuh Pelajar</label>
+                            <input type="text" id="addNamaPelajar" placeholder="Contoh: AHMAD BIN ALI" class="w-full text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">No. Kad Pengenalan (12 Digit)</label>
+                            <input type="text" id="addKPPelajar" placeholder="Contoh: 010203085544" class="w-full text-xs font-mono-score font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Kumpulan / Kelas</label>
+                            <input type="text" id="addKelasPelajar" placeholder="Contoh: KLS-1" class="w-full text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Emel Pensyarah Penilai</label>
+                            <input type="text" id="addPenilaiPelajar" placeholder="Contoh: pensyarah@ipg.edu.my" class="w-full text-xs">
+                        </div>
+                    </div>
+
+                    <button onclick="registerNewStudent()" id="addStudentBtn" class="btn-primary py-3 px-6 rounded-lg text-xs">
+                        <i class="fas fa-plus-circle me-2"></i> Tambah Pelajar Ke Pangkalan Data
+                    </button>
                 </div>
             </div>
         </div>
@@ -359,20 +431,18 @@
 
 <script>
 /**
- * PERLINDUNGAN KESELAMATAN KLIEN (ANTI-INSPECT & ANTI-VIEW SOURCE)
+ * PERLINDUNGAN KESELAMATAN KLIEN
  */
-// 1. Sekat Menu Klik Kanan
 document.addEventListener('contextmenu', function (e) {
     e.preventDefault();
     showToast("Klik kanan dilarang atas faktor keselamatan data.", "warn");
 });
 
-// 2. Sekat Kekunci Pintas Pintar (F12, Ctrl+U, Ctrl+Shift+I, Ctrl+Shift+J)
 document.addEventListener('keydown', function (e) {
     if (
-        e.keyCode === 123 || // F12
-        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || // Ctrl+Shift+I / J
-        (e.ctrlKey && e.keyCode === 85) // Ctrl+U
+        e.keyCode === 123 || 
+        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || 
+        (e.ctrlKey && e.keyCode === 85)
     ) {
         e.preventDefault();
         showToast("Fungsi inspek kod dilarang bagi mod keselamatan.", "warn");
@@ -380,9 +450,6 @@ document.addEventListener('keydown', function (e) {
     }
 });
 
-/**
- * INTEGRASI API GOOGLE APPS SCRIPT
- */
 const API = "https://script.google.com/macros/s/AKfycbzswIp12EFMWfureqO0RtGf92dS-b3r0BdNcK3PZ7jrvoa3u61Nh8n51yRdVLn3BO8f/exec";
 
 let appConfig = {
@@ -398,8 +465,8 @@ let curLecEmail = null;
 let sData = [];
 let curS = null;
 let isSystemUnlocked = false;
+let isSuperAdminUser = false;
 
-// Normalisasi No. KP (Sentiasa 12 Digit String)
 function normalizeKP(kp) {
     if (!kp) return "";
     let clean = kp.toString().trim().replace(/['"\s]/g, '');
@@ -409,7 +476,6 @@ function normalizeKP(kp) {
     return clean;
 }
 
-// Inisialisasi Aplikasi pada Waktu Muat
 window.onload = async () => {
     await fetchAppSettings();
 };
@@ -437,18 +503,16 @@ function updateUIWithConfig() {
     document.getElementById('dispInstitusiSetup').textContent = appConfig.institusi;
     document.getElementById('setupKodKursus').textContent = appConfig.kodKursus;
     document.getElementById('setupNamaKursus').textContent = appConfig.namaKursus;
-    document.getElementById('setupRubrikCount').textContent = `${dynamicRubrics.length} Kriteria Kriteria`;
+    document.getElementById('setupRubrikCount').textContent = `${dynamicRubrics.length} Kriteria`;
 
     document.getElementById('dispInstitusiCard').textContent = appConfig.institusi;
     document.getElementById('dispKodKursusCard').textContent = appConfig.kodKursus;
     document.getElementById('dispNamaKursusCard').textContent = appConfig.namaKursus;
 
-    // Sembunyikan atau tunjukkan Penilaian Rakan
-    const studentPeerTab = document.getElementById('studentPeerTab');
-    const lecturerPeerStatusTab = document.getElementById('lecturerPeerStatusTab');
-    
-    if (studentPeerTab) studentPeerTab.style.display = appConfig.enablePeerEval ? 'block' : 'none';
-    if (lecturerPeerStatusTab) lecturerPeerStatusTab.style.display = appConfig.enablePeerEval ? 'block' : 'none';
+    document.getElementById('cfgKodKursus').value = appConfig.kodKursus;
+    document.getElementById('cfgNamaKursus').value = appConfig.namaKursus;
+    document.getElementById('cfgInstitusi').value = appConfig.institusi;
+    document.getElementById('cfgEnablePeer').value = appConfig.enablePeerEval ? "TRUE" : "FALSE";
 }
 
 async function unlockSystemPortal() {
@@ -522,7 +586,8 @@ async function handleAuth() {
             const r = await fetch(`${API}?action=lecturerLogin&email=${encodeURIComponent(id)}&pass=${encodeURIComponent(pw)}`); 
             const o = await r.json();
             if (o.status === "success") { 
-                curLecEmail = id; 
+                curLecEmail = id;
+                isSuperAdminUser = !!o.isAdmin;
                 initLecturer(id, o.name); 
             } else showToast(o.message, 'warn');
         }
@@ -537,66 +602,17 @@ function renderStudent(d) {
     document.getElementById('sN').textContent = d.Nama_Pelajar || '--';
     document.getElementById('sK').textContent = d.No_KP || '--'; 
     document.getElementById('sC').textContent = d.Kelas || '--';
-    if(d.Link_Gambar) {
-        const img = document.getElementById('sImg');
-        img.src = d.Link_Gambar; img.classList.remove('hidden');
-        document.getElementById('sPl').classList.add('hidden');
-    }
-}
-
-function showStudentTab(t) {
-    document.getElementById('stab-profile').style.display = t==='profile' ? 'flex' : 'none';
-    document.getElementById('stab-peer').style.display = t==='peer' ? 'block' : 'none';
-}
-
-function previewImage(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = document.getElementById('sImg');
-            img.src = e.target.result;
-            img.classList.remove('hidden');
-            document.getElementById('sPl').classList.add('hidden');
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-async function uploadStudentImage() {
-    const fi = document.getElementById('fIn');
-    if (!fi.files || !fi.files[0]) return showToast("Sila pilih gambar terlebih dahulu.", "warn");
-    
-    const btn = document.getElementById('uploadBtn');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Muat Naik...';
-    
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        const b64 = e.target.result.split(',')[1];
-        try {
-            await fetch(API, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({
-                    action: "uploadImage",
-                    noKP: curUser.No_KP,
-                    imageData: b64,
-                    mimeType: fi.files[0].type,
-                    fileName: `${appConfig.kodKursus}_${curUser.No_KP}_${fi.files[0].name}`
-                })
-            });
-            showToast("Gambar berjaya dimuat naik!", "success");
-        } catch(err) {
-            showToast("Ralat muat naik gambar.", "warn");
-        }
-        btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload me-2"></i> Muat Naik';
-    };
-    reader.readAsDataURL(fi.files[0]);
 }
 
 async function initLecturer(email, name) {
     document.getElementById('loginScreen').style.display='none'; 
     document.getElementById('lecturerDash').style.display='flex'; 
     document.getElementById('lecName').textContent = name || email;
+
+    if (isSuperAdminUser) {
+        document.getElementById('superAdminBadge').classList.remove('hidden');
+        document.getElementById('adminSettingsTabBtn').style.display = 'block';
+    }
     
     try {
         const r = await fetch(`${API}?action=getLecturerStudents&email=${encodeURIComponent(email)}`); 
@@ -620,13 +636,13 @@ function filterLecturerStudents(q) {
             <div class="font-bold text-xs text-slate-800">${s.Nama_Pelajar}</div>
             <div class="font-mono-score text-[10px] text-slate-400 mt-1">${s.Kelas} • ${s.No_KP}</div>
         </div>
-    `).join('') || `<div class="text-center p-4 text-xs text-slate-400">Tiada pelajar.</div>`;
+    `).join('') || `<div class="text-center p-4 text-xs text-slate-400">Tiada pelajar. Sila tambah di tab Admin.</div>`;
 }
 
 function showLecTab(t) {
     document.getElementById('ltab-rubrik').style.display = t==='rubrik' ? 'block' : 'none';
     document.getElementById('ltab-summary').style.display = t==='summary' ? 'block' : 'none';
-    document.getElementById('ltab-peerstatus').style.display = t==='peerstatus' ? 'block' : 'none';
+    document.getElementById('ltab-adminsettings').style.display = t==='adminsettings' ? 'block' : 'none';
 }
 
 function selectStudent(kp) {
@@ -641,9 +657,6 @@ function selectStudent(kp) {
     renderDynamicRubrikForm();
 }
 
-/**
- * PENJANA BORANG RUBRIK DINAMIK BERDASARKAN JADUAL SETTINGS
- */
 function renderDynamicRubrikForm() {
     const container = document.getElementById('dynamicRubrikContainer');
     if (!dynamicRubrics || dynamicRubrics.length === 0) {
@@ -651,7 +664,6 @@ function renderDynamicRubrikForm() {
         return;
     }
 
-    // Mengelompokkan Kriteria mengikut Task_ID
     const grouped = {};
     dynamicRubrics.forEach(item => {
         if (!grouped[item.taskId]) {
@@ -690,7 +702,6 @@ async function saveRubrikScores() {
     const btn = document.getElementById('saveRubrikBtn');
     btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Menyimpan...';
     
-    // Kumpul Skor
     const scores = {};
     dynamicRubrics.forEach(c => {
         const el = document.getElementById(`crit_${c.criteriaId}`);
@@ -717,10 +728,79 @@ async function saveRubrikScores() {
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i> SIMPAN MARKAH RUBRIK';
 }
 
+async function saveSystemSettings() {
+    const kod = document.getElementById('cfgKodKursus').value.trim();
+    const nama = document.getElementById('cfgNamaKursus').value.trim();
+    const inst = document.getElementById('cfgInstitusi').value.trim();
+    const enablePeer = document.getElementById('cfgEnablePeer').value === "TRUE";
+
+    if (!kod || !nama || !inst) return showToast("Sila lengkapkan maklumat kursus!", "warn");
+
+    const btn = document.getElementById('saveCfgBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Menyimpan Tetapan...';
+
+    try {
+        await fetch(API, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                action: "updateAppSettings",
+                adminEmail: curLecEmail,
+                kodKursus: kod,
+                namaKursus: nama,
+                institusi: inst,
+                enablePeerEval: enablePeer
+            })
+        });
+        showToast("Tetapan kursus berjaya dikemaskini!", "success");
+        await fetchAppSettings();
+    } catch(e) {
+        showToast("Gagal mengemaskini tetapan kursus.", "warn");
+    }
+
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i> Simpan Tetapan Kursus';
+}
+
+async function registerNewStudent() {
+    const nama = document.getElementById('addNamaPelajar').value.trim();
+    const kp = document.getElementById('addKPPelajar').value.trim();
+    const kelas = document.getElementById('addKelasPelajar').value.trim();
+    const penilai = document.getElementById('addPenilaiPelajar').value.trim();
+
+    if (!nama || !kp || !kelas) return showToast("Sila lengkapkan borang pendaftaran pelajar!", "warn");
+
+    const btn = document.getElementById('addStudentBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Menambah Pelajar...';
+
+    try {
+        await fetch(API, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                action: "addStudent",
+                adminEmail: curLecEmail,
+                nama: nama,
+                noKP: kp,
+                kelas: kelas,
+                penilai: penilai
+            })
+        });
+        showToast(`Pelajar ${nama} berjaya didaftarkan!`, "success");
+        document.getElementById('addNamaPelajar').value = '';
+        document.getElementById('addKPPelajar').value = '';
+        document.getElementById('addKelasPelajar').value = '';
+        initLecturer(curLecEmail, "Super Admin");
+    } catch(e) {
+        showToast("Gagal mendaftarkan pelajar.", "warn");
+    }
+
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus-circle me-2"></i> Tambah Pelajar Ke Pangkalan Data';
+}
+
 function renderSummaryTable() {
     const tbody = document.getElementById('summaryBody');
     if(!sData.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-slate-400">Tiada rekod pelajar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-slate-400">Tiada rekod pelajar. Gunakan tab Tetapan Kursus untuk menambah pelajar.</td></tr>`;
         return;
     }
     tbody.innerHTML = sData.map(s => `
