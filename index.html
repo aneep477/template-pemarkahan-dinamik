@@ -8,6 +8,7 @@
     <!-- Framework & Font Styles -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -389,15 +390,70 @@
                     </button>
                 </div>
 
-                <!-- FORM TAMBAH PELAJAR BAHARU -->
+                <!-- MODUL MUAT NAIK PUKAL EXCEL / CSV -->
+                <div class="academic-card p-6 border-l-4 border-emerald-600 bg-white">
+                    <div class="flex items-center justify-between border-b pb-4 mb-6 flex-wrap gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center text-lg">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-serif-title text-xl font-bold text-slate-800">Pendaftaran Pelajar Pukal (Excel / CSV)</h3>
+                                <p class="text-xs text-slate-500">Muat naik senarai nama pelajar sekaligus menggunakan fail Excel (.xlsx) atau CSV.</p>
+                            </div>
+                        </div>
+                        <button onclick="downloadExcelTemplate()" class="btn-outline py-2.5 px-4 rounded-lg text-xs border-emerald-300 text-emerald-800 hover:bg-emerald-50">
+                            <i class="fas fa-download me-2"></i> Muat Turun Template Excel
+                        </button>
+                    </div>
+
+                    <div class="border-2 border-dashed border-emerald-200 bg-emerald-50/50 rounded-xl p-6 text-center mb-6">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-emerald-600 mb-2"></i>
+                        <h4 class="font-bold text-sm text-slate-800 mb-1">Pilih atau Seret Fail Excel / CSV Ke Sini</h4>
+                        <p class="text-xs text-slate-500 mb-4">Menyokong format .xlsx, .xls, dan .csv</p>
+                        <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(this)">
+                        <button onclick="document.getElementById('excelFileInput').click()" class="btn-primary py-2.5 px-5 rounded-lg text-xs bg-emerald-700 border-emerald-700 hover:bg-emerald-800">
+                            <i class="fas fa-folder-open me-2"></i> Pilih Fail Dari Komputer
+                        </button>
+                    </div>
+
+                    <!-- PRATONTON DATA EXCEL -->
+                    <div id="excelPreviewContainer" class="hidden space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs font-bold uppercase text-slate-700">Pratonton Data Pelajar (<span id="parsedCount">0</span> Rekod)</div>
+                            <button onclick="clearExcelPreview()" class="text-xs text-red-600 font-bold hover:underline">Padam Pratonton</button>
+                        </div>
+                        <div class="overflow-x-auto border border-slate-200 rounded-lg max-h-60 scroll-thin">
+                            <table class="academic-table" id="previewTable">
+                                <thead>
+                                    <tr>
+                                        <th>Bil</th>
+                                        <th>Nama Pelajar</th>
+                                        <th>Jantina</th>
+                                        <th>No. KP</th>
+                                        <th>No. Giliran</th>
+                                        <th>Kelas</th>
+                                        <th>Pensyarah Penilai</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="previewTableBody"></tbody>
+                            </table>
+                        </div>
+                        <button onclick="submitBatchStudents()" id="btnSubmitBatch" class="btn-primary w-full py-3.5 rounded-lg text-xs bg-emerald-800 border-emerald-800 hover:bg-emerald-900">
+                            <i class="fas fa-check-circle me-2"></i> Sahkan &amp; Hantar Semua Ke Pangkalan Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- FORM TAMBAH PELAJAR INDIVIDU (LENGKAP) -->
                 <div class="academic-card p-6 border-l-4 border-blue-900 bg-white">
                     <div class="flex items-center gap-3 border-b pb-4 mb-6">
                         <div class="w-10 h-10 bg-blue-100 text-blue-900 rounded-lg flex items-center justify-center text-lg">
                             <i class="fas fa-user-plus"></i>
                         </div>
                         <div>
-                            <h3 class="font-serif-title text-xl font-bold text-slate-800">Daftar Calon Pelajar Baharu</h3>
-                            <p class="text-xs text-slate-500">Tambah maklumat pelajar terus ke dalam pangkalan data `DATA_PELAJAR`.</p>
+                            <h3 class="font-serif-title text-xl font-bold text-slate-800">Daftar Calon Pelajar (Individu)</h3>
+                            <p class="text-xs text-slate-500">Tambah maklumat pelajar satu-per-satu terus ke dalam pangkalan data `DATA_PELAJAR`.</p>
                         </div>
                     </div>
 
@@ -407,8 +463,19 @@
                             <input type="text" id="addNamaPelajar" placeholder="Contoh: AHMAD BIN ALI" class="w-full text-xs font-bold">
                         </div>
                         <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Jantina</label>
+                            <select id="addJantinaPelajar" class="w-full text-xs font-bold">
+                                <option value="L">Lelaki (L)</option>
+                                <option value="P">Perempuan (P)</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">No. Kad Pengenalan (12 Digit)</label>
                             <input type="text" id="addKPPelajar" placeholder="Contoh: 010203085544" class="w-full text-xs font-mono-score font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">No. Giliran</label>
+                            <input type="text" id="addGiliranPelajar" placeholder="Contoh: 202401234" class="w-full text-xs font-mono-score font-bold">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Kumpulan / Kelas</label>
@@ -654,59 +721,92 @@ function selectStudent(kp) {
     document.getElementById('rubrikStudentName').textContent = curS.Nama_Pelajar;
     document.getElementById('rubrikStudentKP').textContent = `No. KP: ${curS.No_KP} | Kelas: ${curS.Kelas}`;
     
-    renderDynamicRubrikForm();
+    fetchStudentRubrikStatus(curS.No_KP);
 }
 
-function renderDynamicRubrikForm() {
+async function fetchStudentRubrikStatus(kp) {
+    try {
+        const r = await fetch(`${API}?action=getRubrikStatus&noKP=${encodeURIComponent(kp)}`);
+        const o = await r.json();
+        if (o.status === 'success' && o.ada) {
+            renderDynamicRubrikInputs(o.data);
+        } else {
+            renderDynamicRubrikInputs(null);
+        }
+    } catch(e) {
+        renderDynamicRubrikInputs(null);
+    }
+}
+
+function renderDynamicRubrikInputs(dataObj) {
     const container = document.getElementById('dynamicRubrikContainer');
     if (!dynamicRubrics || dynamicRubrics.length === 0) {
-        container.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">Tiada kriteria rubrik dikonfigurasikan dalam Google Sheets.</div>`;
+        container.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">Tiada kriteria rubrik dikonfigurasikan di Helaian SETTINGS.</div>`;
         return;
     }
 
-    const grouped = {};
-    dynamicRubrics.forEach(item => {
-        if (!grouped[item.taskId]) {
-            grouped[item.taskId] = { taskName: item.taskName, items: [] };
-        }
-        grouped[item.taskId].items.push(item);
+    const tasksMap = {};
+    dynamicRubrics.forEach(r => {
+        const key = r.taskName || r.taskId || "Tugasan";
+        if (!tasksMap[key]) tasksMap[key] = [];
+        tasksMap[key].push(r);
     });
 
-    container.innerHTML = Object.keys(grouped).map(taskId => {
-        const group = grouped[taskId];
-        const criteriaInputs = group.items.map(c => `
-            <div class="p-4 border border-slate-200 rounded-lg bg-white mb-3 flex flex-wrap items-center justify-between gap-4">
-                <div class="flex-1">
-                    <div class="text-xs font-bold text-slate-800">[${c.loCode}] ${c.criteriaName}</div>
-                    <div class="text-[11px] text-slate-500 leading-relaxed mt-1">${c.description}</div>
-                </div>
-                <div class="flex flex-col items-end shrink-0">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase">Skor (/ ${c.maxScore})</span>
-                    <input type="number" id="crit_${c.criteriaId}" min="0" max="${c.maxScore}" step="1" value="0" 
-                        class="w-20 text-center font-mono-score text-base font-bold bg-slate-50 border rounded">
-                </div>
-            </div>
-        `).join('');
+    let html = '';
+    Object.keys(tasksMap).forEach(taskKey => {
+        const items = tasksMap[taskKey];
+        html += `
+            <div class="academic-card p-6 bg-white border-l-4 border-blue-900 mb-4">
+                <h4 class="font-bold text-sm text-blue-900 uppercase mb-4 border-b pb-2 flex justify-between items-center">
+                    <span><i class="fas fa-tasks me-2"></i>${taskKey}</span>
+                </h4>
+                <div class="space-y-4">
+        `;
 
-        return `
-            <div class="academic-card p-6 border-l-4 border-blue-900">
-                <h3 class="font-serif-title text-base font-bold text-blue-900 mb-4">${group.taskName} (${taskId})</h3>
-                <div>${criteriaInputs}</div>
+        items.forEach(item => {
+            const val = (dataObj && dataObj[item.criteriaId] !== undefined) ? dataObj[item.criteriaId] : 0;
+            html += `
+                <div class="p-4 border rounded-lg bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="flex-1">
+                        <div class="font-bold text-xs text-slate-800">[${item.loCode}] ${item.criteriaName}</div>
+                        <div class="text-[11px] text-slate-500 mt-1">${item.description}</div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Markah (/ ${item.maxScore})</span>
+                        <input type="number" id="rub_${item.criteriaId}" min="0" max="${item.maxScore}" step="0.5" value="${val}"
+                            oninput="clampInputValue(this, ${item.maxScore})"
+                            class="w-20 text-center font-mono-score text-base font-bold bg-white border rounded p-2 text-blue-900">
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
             </div>
         `;
-    }).join('');
+    });
+
+    container.innerHTML = html;
+}
+
+function clampInputValue(input, max) {
+    let val = parseFloat(input.value) || 0;
+    if (val > max) input.value = max;
+    if (val < 0) input.value = 0;
 }
 
 async function saveRubrikScores() {
-    if(!curS) return;
-    const btn = document.getElementById('saveRubrikBtn');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Menyimpan...';
-    
+    if (!curS) return showToast("Sila pilih calon pelajar!", "warn");
+
     const scores = {};
-    dynamicRubrics.forEach(c => {
-        const el = document.getElementById(`crit_${c.criteriaId}`);
-        if(el) scores[c.criteriaId] = parseFloat(el.value) || 0;
+    dynamicRubrics.forEach(r => {
+        const el = document.getElementById(`rub_${r.criteriaId}`);
+        scores[r.criteriaId] = el ? (parseFloat(el.value) || 0) : 0;
     });
+
+    const btn = document.getElementById('saveRubrikBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Menyimpan Markah Rubrik...';
 
     try {
         await fetch(API, {
@@ -721,49 +821,123 @@ async function saveRubrikScores() {
                 data: scores
             })
         });
-        showToast("Markah rubrik dinamik berjaya disimpan!", "success");
+        showToast("Markah rubrik berjaya disimpan!", "success");
+        initLecturer(curLecEmail, "Pensyarah");
     } catch(e) {
-        showToast("Gagal menyimpan markah rubrik.", "warn");
+        showToast("Ralat menyimpan markah rubrik.", "warn");
     }
+
     btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i> SIMPAN MARKAH RUBRIK';
 }
 
-async function saveSystemSettings() {
-    const kod = document.getElementById('cfgKodKursus').value.trim();
-    const nama = document.getElementById('cfgNamaKursus').value.trim();
-    const inst = document.getElementById('cfgInstitusi').value.trim();
-    const enablePeer = document.getElementById('cfgEnablePeer').value === "TRUE";
+let parsedStudentsBatch = [];
 
-    if (!kod || !nama || !inst) return showToast("Sila lengkapkan maklumat kursus!", "warn");
+function downloadExcelTemplate() {
+    const templateData = [
+        ["Nama_Pelajar", "Jantina", "No_KP", "No_Giliran", "Kelas", "Penilai"],
+        ["AHMAD BIN ALI", "L", "010203085544", "202401001", "KLS-1", "pensyarah@ipg.edu.my"],
+        ["SITI BINTI AHMAD", "P", "020304071122", "202401002", "KLS-1", "pensyarah@ipg.edu.my"]
+    ];
 
-    const btn = document.getElementById('saveCfgBtn');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Menyimpan Tetapan...';
+    const ws = XLSX.utils.aoa_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "DATA_PELAJAR");
+    XLSX.writeFile(wb, "Template_Data_Pelajar.xlsx");
+}
+
+function handleExcelUpload(fileInput) {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet, {raw: false});
+
+            if (!json || json.length === 0) {
+                return showToast("Fail Excel kosong atau format tidak sah!", "warn");
+            }
+
+            parsedStudentsBatch = json.map(r => ({
+                nama: r.Nama_Pelajar || r.nama || "",
+                jantina: r.Jantina || r.jantina || "L",
+                noKP: normalizeKP(r.No_KP || r.noKP || r.KP || ""),
+                noGiliran: r.No_Giliran || r.noGiliran || "-",
+                kelas: r.Kelas || r.kelas || "",
+                penilai: r.Penilai || r.penilai || ""
+            })).filter(s => s.nama && s.noKP);
+
+            if (parsedStudentsBatch.length === 0) {
+                return showToast("Sila pastikan lajur `Nama_Pelajar` dan `No_KP` diisi dengan betul!", "warn");
+            }
+
+            renderExcelPreview();
+        } catch (err) {
+            showToast("Gagal membaca fail Excel/CSV.", "warn");
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function renderExcelPreview() {
+    document.getElementById('excelPreviewContainer').classList.remove('hidden');
+    document.getElementById('parsedCount').textContent = parsedStudentsBatch.length;
+
+    const tbody = document.getElementById('previewTableBody');
+    tbody.innerHTML = parsedStudentsBatch.map((s, idx) => `
+        <tr>
+            <td class="font-bold text-center">${idx + 1}</td>
+            <td class="font-bold text-xs">${s.nama}</td>
+            <td class="text-center font-bold">${s.jantina}</td>
+            <td class="font-mono-score text-xs">${s.noKP}</td>
+            <td class="font-mono-score text-xs">${s.noGiliran}</td>
+            <td class="text-xs">${s.kelas}</td>
+            <td class="text-xs text-slate-500">${s.penilai}</td>
+        </tr>
+    `).join('');
+}
+
+function clearExcelPreview() {
+    parsedStudentsBatch = [];
+    document.getElementById('excelPreviewContainer').classList.add('hidden');
+    document.getElementById('excelFileInput').value = '';
+}
+
+async function submitBatchStudents() {
+    if (!parsedStudentsBatch.length) return showToast("Tiada data untuk dimuat naik!", "warn");
+
+    const btn = document.getElementById('btnSubmitBatch');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Memuat Naik Pukal...';
 
     try {
         await fetch(API, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify({
-                action: "updateAppSettings",
+                action: "batchAddStudents",
                 adminEmail: curLecEmail,
-                kodKursus: kod,
-                namaKursus: nama,
-                institusi: inst,
-                enablePeerEval: enablePeer
+                students: parsedStudentsBatch
             })
         });
-        showToast("Tetapan kursus berjaya dikemaskini!", "success");
-        await fetchAppSettings();
+        showToast(`Berjaya memuat naik ${parsedStudentsBatch.length} calon pelajar ke Google Sheets!`, "success");
+        clearExcelPreview();
+        initLecturer(curLecEmail, "Super Admin");
     } catch(e) {
-        showToast("Gagal mengemaskini tetapan kursus.", "warn");
+        showToast("Gagal memuat naik data pukal.", "warn");
     }
 
-    btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i> Simpan Tetapan Kursus';
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Sahkan &amp; Hantar Semua Ke Pangkalan Data';
 }
 
 async function registerNewStudent() {
     const nama = document.getElementById('addNamaPelajar').value.trim();
+    const jantina = document.getElementById('addJantinaPelajar').value;
     const kp = document.getElementById('addKPPelajar').value.trim();
+    const giliran = document.getElementById('addGiliranPelajar').value.trim();
     const kelas = document.getElementById('addKelasPelajar').value.trim();
     const penilai = document.getElementById('addPenilaiPelajar').value.trim();
 
@@ -780,7 +954,9 @@ async function registerNewStudent() {
                 action: "addStudent",
                 adminEmail: curLecEmail,
                 nama: nama,
+                jantina: jantina,
                 noKP: kp,
+                noGiliran: giliran,
                 kelas: kelas,
                 penilai: penilai
             })
@@ -788,6 +964,7 @@ async function registerNewStudent() {
         showToast(`Pelajar ${nama} berjaya didaftarkan!`, "success");
         document.getElementById('addNamaPelajar').value = '';
         document.getElementById('addKPPelajar').value = '';
+        document.getElementById('addGiliranPelajar').value = '';
         document.getElementById('addKelasPelajar').value = '';
         initLecturer(curLecEmail, "Super Admin");
     } catch(e) {
