@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Portal Pemarkahan Akademik Dinamik</title>
+    <title id="pageTitle">Portal Pemarkahan Akademik Dinamik - Mod Persediaan Keselamatan</title>
     
     <!-- Framework & Font Styles -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -26,7 +26,17 @@
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* Halang Pemilihan Teks & Penyalinan Unsur */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-body); min-height: 100vh; color: var(--text-main); }
         .font-serif-title { font-family: 'Lora', serif; }
         .font-mono-score { font-family: 'Space Mono', monospace; }
@@ -52,7 +62,19 @@
         .scroll-thin::-webkit-scrollbar-track { background: var(--bg-alt); border-radius: 10px; }
         .scroll-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        input[type=number], input[type=text], input[type=password], textarea, select { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-main); outline: none; transition: all 0.2s; border-radius: 0.5rem; padding: 0.75rem 1rem; }
+        input[type=number], input[type=text], input[type=password], textarea, select { 
+            background: var(--bg-surface); 
+            border: 1px solid var(--border); 
+            color: var(--text-main); 
+            outline: none; 
+            transition: all 0.2s; 
+            border-radius: 0.5rem; 
+            padding: 0.75rem 1rem; 
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
         input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
 
         #toast { position: fixed; top: 24px; right: 24px; z-index: 9999; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -74,14 +96,15 @@
 </head>
 <body>
 
-<!-- BAR NOTIS & DISCLAiMER -->
+<!-- BAR NOTIS & DISCLAIMER -->
 <div class="disclaimer-bar" id="globalDisclaimer">
-    <i class="fas fa-landmark" style="color:#facc15; font-size:14px;"></i>
+    <i class="fas fa-shield-alt" style="color:#facc15; font-size:14px;"></i>
     <span style="flex:1;">
-        <strong id="dispInstitusiHeader">INSTITUSI</strong>
+        <strong id="dispInstitusiHeader">SISTEM KESELAMATAN KURSUS</strong>
         <span class="mx-2">|</span> KOD KURSUS: <strong id="dispKodKursusHeader">...</strong>
         <span class="mx-2">|</span> NAMA KURSUS: <strong id="dispNamaKursusHeader">Memuatkan Tetapan...</strong>
     </span>
+    <span id="setupStatusBadge" class="bg-amber-500 text-slate-900 font-bold px-2 py-0.5 rounded text-[10px] uppercase">MOD PERSEDIAAN (LOCKED)</span>
 </div>
 
 <!-- NOTIFIKASI TOAST -->
@@ -89,8 +112,54 @@
     <div class="academic-card px-5 py-4 flex items-center gap-3 text-sm font-bold shadow-lg" id="toastMsg" style="border-left: 4px solid #15803d;"></div>
 </div>
 
-<!-- SKRIN LOG MASUK -->
-<div class="shell" id="loginScreen">
+<!-- SKRIN PERSEDIAAN ADMIN (KUNCI AWAL KESELAMATAN) -->
+<div class="shell" id="adminSetupScreen">
+    <div class="academic-card w-full shadow-2xl p-8 sm:p-10 border-t-8 border-amber-600" style="max-width:500px;">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl border border-amber-300">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="text-amber-700 font-extrabold text-xs uppercase tracking-widest mb-1" id="dispInstitusiSetup">KAPASITI PENTADBIR SAHAJA</div>
+            <h1 class="font-serif-title text-2xl font-bold text-slate-900 mb-2">Mod Persediaan Sistem</h1>
+            <p class="text-xs text-slate-500 font-semibold leading-relaxed">
+                Aplikasi ini berada dalam status <strong>DIKUNCI</strong> untuk pengesahan &amp; konfigurasi awal. Akses Pelajar dan Pensyarah belum dibuka.
+            </p>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 space-y-2 text-xs">
+            <div class="flex justify-between border-b pb-2">
+                <span class="font-bold text-slate-500">Kod Kursus:</span>
+                <span id="setupKodKursus" class="font-mono-score font-bold text-slate-800">...</span>
+            </div>
+            <div class="flex justify-between border-b pb-2">
+                <span class="font-bold text-slate-500">Nama Kursus:</span>
+                <span id="setupNamaKursus" class="font-bold text-slate-800">...</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="font-bold text-slate-500">Kriteria Rubrik:</span>
+                <span id="setupRubrikCount" class="font-mono-score font-bold text-blue-900">0 Dijumpai</span>
+            </div>
+        </div>
+
+        <div class="space-y-4 mb-6">
+            <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Emel Super Admin</label>
+                <input type="text" id="adminEmailIn" placeholder="hanifffaizal@gmail.com" class="w-full text-center text-xs">
+            </div>
+            <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Kata Laluan Pentadbiran</label>
+                <input type="password" id="adminPassIn" placeholder="••••••••" class="w-full text-center text-xs">
+            </div>
+        </div>
+
+        <button onclick="unlockSystemPortal()" id="unlockBtn" class="btn-primary w-full rounded-lg p-4 text-sm bg-amber-700 border-amber-700 hover:bg-amber-800">
+            <i class="fas fa-lock-open me-2"></i> Pengesahan &amp; Buka Portal Rasmi
+        </button>
+    </div>
+</div>
+
+<!-- SKRIN LOG MASUK (Hanya aktif selepas Super Admin membuka kunci) -->
+<div class="shell hidden" id="loginScreen">
     <div class="academic-card w-full shadow-2xl p-8 sm:p-10 border-t-4" style="max-width:440px; border-top-color: var(--primary);">
         
         <div class="text-center mb-8">
@@ -290,7 +359,29 @@
 
 <script>
 /**
- * AKSELERATOR & INTEGRASI API GOOGLE APPS SCRIPT
+ * PERLINDUNGAN KESELAMATAN KLIEN (ANTI-INSPECT & ANTI-VIEW SOURCE)
+ */
+// 1. Sekat Menu Klik Kanan
+document.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    showToast("Klik kanan dilarang atas faktor keselamatan data.", "warn");
+});
+
+// 2. Sekat Kekunci Pintas Pintar (F12, Ctrl+U, Ctrl+Shift+I, Ctrl+Shift+J)
+document.addEventListener('keydown', function (e) {
+    if (
+        e.keyCode === 123 || // F12
+        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || // Ctrl+Shift+I / J
+        (e.ctrlKey && e.keyCode === 85) // Ctrl+U
+    ) {
+        e.preventDefault();
+        showToast("Fungsi inspek kod dilarang bagi mod keselamatan.", "warn");
+        return false;
+    }
+});
+
+/**
+ * INTEGRASI API GOOGLE APPS SCRIPT
  */
 const API = "https://script.google.com/macros/s/AKfycbzswIp12EFMWfureqO0RtGf92dS-b3r0BdNcK3PZ7jrvoa3u61Nh8n51yRdVLn3BO8f/exec";
 
@@ -306,6 +397,7 @@ let curUser = null;
 let curLecEmail = null;
 let sData = [];
 let curS = null;
+let isSystemUnlocked = false;
 
 // Normalisasi No. KP (Sentiasa 12 Digit String)
 function normalizeKP(kp) {
@@ -342,6 +434,11 @@ function updateUIWithConfig() {
     document.getElementById('dispKodKursusHeader').textContent = appConfig.kodKursus;
     document.getElementById('dispNamaKursusHeader').textContent = appConfig.namaKursus;
     
+    document.getElementById('dispInstitusiSetup').textContent = appConfig.institusi;
+    document.getElementById('setupKodKursus').textContent = appConfig.kodKursus;
+    document.getElementById('setupNamaKursus').textContent = appConfig.namaKursus;
+    document.getElementById('setupRubrikCount').textContent = `${dynamicRubrics.length} Kriteria Kriteria`;
+
     document.getElementById('dispInstitusiCard').textContent = appConfig.institusi;
     document.getElementById('dispKodKursusCard').textContent = appConfig.kodKursus;
     document.getElementById('dispNamaKursusCard').textContent = appConfig.namaKursus;
@@ -352,6 +449,39 @@ function updateUIWithConfig() {
     
     if (studentPeerTab) studentPeerTab.style.display = appConfig.enablePeerEval ? 'block' : 'none';
     if (lecturerPeerStatusTab) lecturerPeerStatusTab.style.display = appConfig.enablePeerEval ? 'block' : 'none';
+}
+
+async function unlockSystemPortal() {
+    const email = document.getElementById('adminEmailIn').value.trim();
+    const pass = document.getElementById('adminPassIn').value;
+
+    if (!email || !pass) return showToast("Sila masukkan kredensial pentadbir!", "warn");
+
+    const btn = document.getElementById('unlockBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Mengesahkan Pentadbir...';
+
+    try {
+        const r = await fetch(`${API}?action=lecturerLogin&email=${encodeURIComponent(email)}&pass=${encodeURIComponent(pass)}`);
+        const o = await r.json();
+
+        if (o.status === "success" && o.isAdmin) {
+            isSystemUnlocked = true;
+            document.getElementById('adminSetupScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            
+            const badge = document.getElementById('setupStatusBadge');
+            badge.textContent = "PORTAL AKTIF (UNLOCKED)";
+            badge.className = "bg-green-600 text-white font-bold px-2 py-0.5 rounded text-[10px] uppercase";
+
+            showToast("Sistem berjaya disahkan & portal dibuka!", "success");
+        } else {
+            showToast("Akses Ditolak: Hanya Super Admin sah boleh membuka kunci persediaan.", "warn");
+        }
+    } catch(e) {
+        showToast("Ralat pengesahan keselamatan.", "warn");
+    }
+
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-lock-open me-2"></i> Pengesahan &amp; Buka Portal Rasmi';
 }
 
 function showToast(msg, type='success') { 
@@ -369,6 +499,10 @@ function setType(t) {
 }
 
 async function handleAuth() {
+    if (!isSystemUnlocked) {
+        return showToast("Portal belum dibuka secara rasmi oleh Super Admin.", "warn");
+    }
+
     const id = document.getElementById('idIn').value.trim();
     const pw = document.getElementById('pwIn').value;
     if (!id) return showToast('Sila masukkan kredensial!', 'warn');
